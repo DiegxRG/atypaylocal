@@ -1,0 +1,11 @@
+.env
+.DS_Store
+
+# Carpetas del Frontend
+/Frontend/node_modules
+
+# Carpetas del Backend (Laravel)
+/Backend/vendor
+/Backend/node_modules
+/Backend/storage
+/Backend/.env

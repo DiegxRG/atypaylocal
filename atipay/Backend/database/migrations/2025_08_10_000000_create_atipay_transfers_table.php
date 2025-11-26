@@ -1,0 +1,27 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('atipay_transfers', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('sender_id')->constrained('users')->onDelete('cascade');
+            $table->foreignId('receiver_id')->constrained('users')->onDelete('cascade');
+            $table->decimal('amount', 10, 2);
+            $table->enum('status', ['pending', 'approved', 'rejected', 'not_evaluated'])->default('pending');
+            $table->date('registration_date')->nullable(); 
+            $table->time('registration_time')->nullable();
+            $table->timestamps();
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('atipay_transfers');
+    }
+};
