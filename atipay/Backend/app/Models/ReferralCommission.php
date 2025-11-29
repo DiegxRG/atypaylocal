@@ -2,11 +2,15 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+
 use Illuminate\Database\Eloquent\Model;
-use App\Models\User;
+
 
 class ReferralCommission extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
         'user_id',
         'referred_user_id',
@@ -17,18 +21,18 @@ class ReferralCommission extends Model
         'month',
         'year',
         'withdrawn',
-        'locked',
+        'locked' // <--- ¡IMPORTANTE: Agrega esto!
     ];
-    
-    protected $hidden = ['created_at', 'updated_at', 'reward_image'];
 
-    public function user()
+    // --- Filtros útiles para el cierre mensual ---
+
+    public function scopeByMonth($query, $month, $year)
     {
-        return $this->belongsTo(User::class);
+        return $query->where('month', $month)->where('year', $year);
     }
 
-    public function referredUser()
+    public function scopeByUser($query, $userId)
     {
-        return $this->belongsTo(User::class, 'referred_user_id');
+        return $query->where('user_id', $userId);
     }
 }

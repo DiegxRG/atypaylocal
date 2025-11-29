@@ -21,6 +21,8 @@ use App\Http\Controllers\Api\Reward\RewardController;
 use App\Http\Controllers\Api\Qualification\QualificationController; // Nuevo Controlador
 use App\Http\Middleware\IsAdmin;
 use App\Http\Middleware\IsUserAuth;
+use App\Http\Controllers\Api\Closing\MonthlyClosingController;
+
 
 // Rutas públicas
 Route::post('register', [AuthUserController::class, 'registerUser']);
@@ -51,6 +53,10 @@ Route::middleware(IsUserAuth::class)->group(function () {
 
     // Qualification Status (Auth)
     Route::get('user/qualification-status', [QualificationController::class, 'checkMyStatus']);
+    Route::get('/my-monthly-status', [MonthlyClosingController::class, 'myStatus']);
+    Route::get('/my-points-history', [MonthlyClosingController::class, 'getHistory']);
+    
+
 
     // Atipay Transfers (Auth)
     Route::get('atipay-transfers/sent', [AtipayTransferController::class, 'sent']);  
@@ -181,6 +187,7 @@ Route::middleware(IsUserAuth::class)->group(function () {
         // Qualification Settings (admin)
         Route::get('admin/qualification/settings', [QualificationController::class, 'getSettings']);
         Route::post('admin/qualification/update', [QualificationController::class, 'updateMinPoints']);
+        Route::post('admin/force-closing', [MonthlyClosingController::class, 'forceClosing']);
 
         // Inversiones (admin)
         Route::get('investments/pending', [InvestmentController::class, 'pending']);

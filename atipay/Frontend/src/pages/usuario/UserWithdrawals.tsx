@@ -9,6 +9,7 @@ import api from '@/services/api';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { NewWithdrawalDialog } from '@/components/withdrawals/NewWithdrawalDialog';
+import QualificationStatusCard from '../../components/dashboard/QualificationStatusCard';
 
 type WithdrawalData = Omit<Withdrawal, 'status'> & {
   status: 'pending' | 'approved' | 'rejected' | 'earring';
@@ -45,10 +46,8 @@ export function UserWithdrawals() {
     };
 
     fetchQualification();
-    // Escuchar cambios realizados por el admin en otra pestaña
     const onStorage = (ev: StorageEvent) => {
       if (ev.key === 'qualification_min_points_update' && ev.newValue) {
-        // Re-fetch para actualizar el estado sin recargar la página
         fetchQualification();
       }
     };
@@ -157,64 +156,80 @@ export function UserWithdrawals() {
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="w-full">
-        {/* Encabezado */}
-        <div className="md:flex md:items-center md:justify-between mb-8">
-          <div className="w-full">
-            <h2 className="text-2xl font-bold text-gray-900 sm:text-3xl mb-4">
-              Mis Retiros
-            </h2>
+        
+        {/* --- INICIO ENCABEZADO --- */}
+        <div className="mb-8">
+          {/* Fila superior: Título a la izquierda, Botón a la derecha */}
+          <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-6">
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900 sm:text-3xl">
+                Mis Retiros
+              </h2>
+              <p className="mt-1 text-sm text-gray-500">
+                Gestiona y revisa el estado de tus solicitudes de retiro
+              </p>
+            </div>
 
-            {isLoading && (
-              <div className="mb-4 p-4 bg-blue-50 text-blue-800 rounded-md">
-                Cargando tus retiros...
-              </div>
-            )}
+            <div className="flex-shrink-0">
+              <Button
+                onClick={handleNewWithdraw}
+                disabled={!isQualified}
+                className={`transition-all duration-200 ${
+                  isQualified
+                    ? 'bg-green-600 hover:bg-green-700 text-white shadow-sm'
+                    : 'bg-slate-100 text-slate-500 border border-slate-200 cursor-not-allowed hover:bg-slate-100'
+                }`}
+                title={!isQualified ? `Necesitas ${qualificationData.required_points - qualificationData.current_points} puntos más para calificar` : 'Crear nuevo retiro'}
+              >
+                {!isQualified ? (
+                  <div className="flex items-center gap-2">
+                    <Lock className="h-4 w-4 text-slate-400" />
+                    <span className="font-medium">No Calificado</span>
+                    {/* AQUÍ ESTÁ EL CAMBIO: Números más grandes (text-xs) y oscuros (text-slate-800) */}
+                    <span className="bg-slate-200 text-slate-800 text-xs px-2 py-0.5 rounded-full font-bold ml-2">
+                      {qualificationData.current_points}/{qualificationData.required_points}
+                    </span>
+                  </div>
+                ) : (
+                  <div className="flex items-center">
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Nuevo Retiro
+                  </div>
+                )}
+              </Button>
+              <NewWithdrawalDialog
+                open={isNewWithdrawalOpen}
+                onOpenChange={setIsNewWithdrawalOpen}
+                onSuccess={handleWithdrawalSuccess}
+              />
+            </div>
+          </div>
 
-            {error && (
-              <div className="mb-4 p-4 bg-red-50 text-red-800 rounded-md">
-                {error}
-                <button
-                  onClick={loadWithdrawals}
-                  className="ml-4 px-3 py-1 bg-red-100 hover:bg-red-200 text-red-800 rounded-md text-sm"
-                >
-                  Reintentar
-                </button>
-              </div>
-            )}
-            <p className="mt-1 text-sm text-gray-500">
-              Gestiona y revisa el estado de tus solicitudes de retiro
-            </p>
+          {/* Tarjeta de calificación debajo del título/botón */}
+          <div className="mb-6">
+            <QualificationStatusCard />
           </div>
-          <div className="mt-4 flex md:mt-0 md:ml-4">
-            <Button
-              onClick={handleNewWithdraw}
-              disabled={!isQualified}
-              className={`text-white ${
-                isQualified
-                  ? 'bg-green-600 hover:bg-green-700'
-                  : 'bg-gray-400 cursor-not-allowed'
-              }`}
-              title={!isQualified ? `Necesitas ${qualificationData.required_points - qualificationData.current_points} puntos más para calificar` : 'Crear nuevo retiro'}
-            >
-              {!isQualified ? (
-                <>
-                  <Lock className="mr-2 h-4 w-4" />
-                  No Calificado ({qualificationData.current_points}/{qualificationData.required_points})
-                </>
-              ) : (
-                <>
-                  <PlusCircle className="mr-2 h-4 w-4" />
-                  Nuevo Retiro
-                </>
-              )}
-            </Button>
-            <NewWithdrawalDialog
-              open={isNewWithdrawalOpen}
-              onOpenChange={setIsNewWithdrawalOpen}
-              onSuccess={handleWithdrawalSuccess}
-            />
-          </div>
+
+          {/* Mensajes de carga y error */}
+          {isLoading && (
+            <div className="mb-4 p-4 bg-blue-50 text-blue-800 rounded-md">
+              Cargando tus retiros...
+            </div>
+          )}
+
+          {error && (
+            <div className="mb-4 p-4 bg-red-50 text-red-800 rounded-md">
+              {error}
+              <button
+                onClick={loadWithdrawals}
+                className="ml-4 px-3 py-1 bg-red-100 hover:bg-red-200 text-red-800 rounded-md text-sm"
+              >
+                Reintentar
+              </button>
+            </div>
+          )}
         </div>
+        {/* --- FIN ENCABEZADO --- */}
 
         {/* Resumen */}
         <div className="grid gap-4 md:grid-cols-4 mb-8">
@@ -301,6 +316,33 @@ export function UserWithdrawals() {
             </p>
           </div>
         </div>
+
+        {/* Barra de estado arriba de la tabla */}
+        {withdrawals.length > 0 && (
+          <div className="mb-4">
+            <div className="flex justify-center">
+              <span
+                className={`inline-flex items-center justify-center w-full px-4 py-2 rounded-lg text-sm font-medium ${
+                  withdrawals.some(w => w.status === 'pending' || w.status === 'earring')
+                    ? 'bg-gray-400 text-white'
+                    : withdrawals.some(w => w.status === 'approved')
+                    ? 'bg-green-600 text-white'
+                    : withdrawals.some(w => w.status === 'rejected')
+                    ? 'bg-red-600 text-white'
+                    : 'bg-gray-200 text-gray-800'
+                }`}
+              >
+                {withdrawals.some(w => w.status === 'pending' || w.status === 'earring')
+                  ? 'Pendiente'
+                  : withdrawals.some(w => w.status === 'approved')
+                  ? 'Aprobado'
+                  : withdrawals.some(w => w.status === 'rejected')
+                  ? 'Rechazado'
+                  : 'Sin estado'}
+              </span>
+            </div>
+          </div>
+        )}
 
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden mb-8">
           <div className="p-6">
@@ -449,6 +491,5 @@ export function UserWithdrawals() {
     </div>
   );
 }
-
 
 export default UserWithdrawals;

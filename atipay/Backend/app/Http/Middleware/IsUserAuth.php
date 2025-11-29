@@ -10,10 +10,17 @@ class IsUserAuth
 {
     public function handle(Request $request, Closure $next): Response
     {
-        if (auth('api')->user()) {
-            return $next($request);
-        } else{
+        $user = auth('api')->user();
+
+        if (!$user) {
             return response()->json(['error' => 'No autorizado'], 401);
         }
+
+        // NECESARIO para que $request->user() funcione
+        $request->setUserResolver(function () use ($user) {
+            return $user;
+        });
+
+        return $next($request);
     }
 }
